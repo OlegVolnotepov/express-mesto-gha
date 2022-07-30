@@ -7,7 +7,7 @@ const getCards = async (req, res) => {
     if (cards) {
       res.status(200).send(cards);
     } else {
-      return res.status(404).send("Карточки не найдены");
+      return res.status(404).send({ message: "Карточки не найдены" });
     }
   } catch (err) {
     return res.status(500).send(err);
@@ -20,7 +20,7 @@ const deleteCard = async (req, res) => {
     if (cards) {
       return res.status(200).send(cards);
     } else {
-      return res.status(404).send("Карточка не найдена");
+      return res.status(404).send({ message: "Карточка не найдена" });
     }
   } catch (err) {
     return res.status(500).send(err);
@@ -39,11 +39,11 @@ const createCard = async (req, res) => {
     } else {
       return res
         .status(500)
-        .send("Карточка не создана. Что то пошло не так...");
+        .send({ message: "Карточка не создана. Что то пошло не так..." });
     }
   } catch (err) {
     if (err.name === "ValidationError") {
-      res.status(400).send(`Переданы некоректные данные: ${err}`);
+      res.status(400).send({ message: err.message });
       return;
     }
     return res.status(500).send(err);
@@ -59,12 +59,12 @@ const likeCard = async (req, res) => {
       { new: true }
     );
     if (!card) {
-      return res.status(404).send("Не найден id карточки");
+      return res.status(404).send({ message: "Не найден id карточки" });
     }
     res.status(200).send(card);
   } catch (err) {
     if (err.name === "CastError") {
-      return res.status(400).send(`Переданы некоректные данные: ${err}`);
+      return res.status(400).send({ message: err.message });
     }
     return res.status(500).send(err);
   }
@@ -79,12 +79,12 @@ const deleteLike = async (req, res) => {
       { new: true }
     );
     if (!card) {
-      return res.status(404).send("Не найден id карточки");
+      return res.status(404).send({ message: "Не найден id карточки" });
     }
     res.status(200).send(card);
   } catch (err) {
     if (err.name === "CastError") {
-      return res.status(400).send(`Переданы некоректные данные: ${err}`);
+      return res.status(400).send({ message: err.message });
     }
     return res.status(500).send(err);
   }

@@ -26,9 +26,7 @@ const getUserId = async (req, res) => {
     }
   } catch (err) {
     if (err.name === "ValidationError") {
-      return res
-        .status(400)
-        .send({ message: "Переданы некоректные данные", error: err.message });
+      return res.status(400).send({ message: err.message });
     }
     return res.status(500).send(err);
   }
@@ -50,9 +48,7 @@ const createUser = async (req, res) => {
     }
   } catch (err) {
     if (err.name === "ValidationError") {
-      return res
-        .status(400)
-        .send({ message: "Переданы некоректные данные", error: err.message });
+      return res.status(400).send({ message: err.message });
     }
     return res.status(500).send(err);
   }
@@ -74,9 +70,7 @@ const updateUser = async (req, res) => {
     }
   } catch (err) {
     if (err.name === "ValidationError") {
-      return res
-        .status(400)
-        .send({ message: "Переданы некоректные данные", error: err.message });
+      return res.status(400).send({ message: err.message });
     }
     return res.status(500).send(err);
   }
@@ -98,9 +92,7 @@ const updateAvatar = async (req, res) => {
     }
   } catch (err) {
     if (err.name === "ValidationError") {
-      return res
-        .status(400)
-        .send({ message: "Переданы некоректные данные", error: err.message });
+      return res.status(400).send({ message: err.message });
     }
     return res.status(500).send(err);
   }
