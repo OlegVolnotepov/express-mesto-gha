@@ -1,14 +1,12 @@
-//const res = require("express/lib/response");
-const User = require("../models/user");
+const User = require('../models/user');
 
 const getUsers = async (req, res) => {
   try {
     const user = await User.find({});
     if (user) {
       return res.status(200).send(user);
-    } else {
-      return res.status(404).send({ message: "пользователи не найдены" });
     }
+    res.status(404).send({ message: 'пользователи не найдены' });
   } catch (err) {
     return res.status(500).send(err);
   }
@@ -19,13 +17,10 @@ const getUserId = async (req, res) => {
     const user = await User.findById(req.params.userId);
     if (user) {
       return res.status(200).send(user);
-    } else {
-      return res
-        .status(404)
-        .send({ message: "Пользователя с таким id не найдено" });
     }
+    res.status(404).send({ message: 'Пользователя с таким id не найдено' });
   } catch (err) {
-    if (err.name === "ValidationError") {
+    if (err.name === 'ValidationError') {
       return res.status(400).send({ message: err.message });
     }
     return res.status(500).send(err);
@@ -40,14 +35,13 @@ const createUser = async (req, res) => {
       avatar: req.body.avatar,
     });
     if (user) {
-      return res.status(200).send(user);
-    } else {
-      return res
-        .status(404)
-        .send({ message: "Пользователь не создан, что то пошло не так..." });
+      return res.status(201).send(user);
     }
+    res
+      .status(404)
+      .send({ message: 'Пользователь не создан, что то пошло не так...' });
   } catch (err) {
-    if (err.name === "ValidationError") {
+    if (err.name === 'ValidationError') {
       return res.status(400).send({ message: err.message });
     }
     return res.status(500).send(err);
@@ -63,13 +57,12 @@ const updateUser = async (req, res) => {
     });
     if (user) {
       return res.status(200).send(user);
-    } else {
-      return res
-        .status(404)
-        .send({ message: "Пользователь не создан, что то пошло не так..." });
     }
+    res
+      .status(404)
+      .send({ message: 'Пользователь не создан, что то пошло не так...' });
   } catch (err) {
-    if (err.name === "ValidationError") {
+    if (err.name === 'ValidationError') {
       return res.status(400).send({ message: err.message });
     }
     return res.status(500).send(err);
@@ -85,13 +78,12 @@ const updateAvatar = async (req, res) => {
 
     if (user) {
       return res.status(200).send(user);
-    } else {
-      return res
-        .status(404)
-        .send({ message: "Аватар не обновлен, что то пошло не так..." });
     }
+    res
+      .status(404)
+      .send({ message: 'Аватар не обновлен, что то пошло не так...' });
   } catch (err) {
-    if (err.name === "ValidationError") {
+    if (err.name === 'ValidationError') {
       return res.status(400).send({ message: err.message });
     }
     return res.status(500).send(err);
