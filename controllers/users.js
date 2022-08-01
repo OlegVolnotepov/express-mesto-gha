@@ -1,29 +1,40 @@
 const User = require('../models/user');
 
+const {
+  NOT_FOUND_ERROR,
+  OK,
+  INTERNAL_SERVER_ERROR,
+  BAD_REQUEST_ERROR,
+  CREATED,
+} = require('../utils/errorMessage');
+
 const getUsers = async (req, res) => {
   try {
     const user = await User.find({});
-    if (user) {
-      return res.status(200).send(user);
-    }
-    res.status(404).send({ message: 'пользователи не найдены' });
+    return res.status(OK).send(user);
   } catch (err) {
-    return res.status(500).send(err);
+    return res
+      .status(INTERNAL_SERVER_ERROR)
+      .send({ message: 'Ошибка сервера' });
   }
 };
 
 const getUserId = async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
-    if (user) {
-      return res.status(200).send(user);
+    if (!user) {
+      return res
+        .status(NOT_FOUND_ERROR)
+        .send({ message: 'Пользователя с таким id не найдено' });
     }
-    res.status(404).send({ message: 'Пользователя с таким id не найдено' });
+    return res.status(OK).send(user);
   } catch (err) {
-    if (err.name === 'ValidationError') {
-      return res.status(400).send({ message: err.message });
+    if (err.name === 'CastError') {
+      return res.status(BAD_REQUEST_ERROR).send({ message: err.message });
     }
-    return res.status(500).send(err);
+    return res
+      .status(INTERNAL_SERVER_ERROR)
+      .send({ message: 'Ошибка сервера' });
   }
 };
 
@@ -34,17 +45,15 @@ const createUser = async (req, res) => {
       about: req.body.about,
       avatar: req.body.avatar,
     });
-    if (user) {
-      return res.status(201).send(user);
-    }
-    res
-      .status(404)
-      .send({ message: 'Пользователь не создан, что то пошло не так...' });
+
+    return res.status(CREATED).send(user);
   } catch (err) {
     if (err.name === 'ValidationError') {
-      return res.status(400).send({ message: err.message });
+      return res.status(BAD_REQUEST_ERROR).send({ message: err.message });
     }
-    return res.status(500).send(err);
+    return res
+      .status(INTERNAL_SERVER_ERROR)
+      .send({ message: 'Ошибка сервера' });
   }
 };
 
@@ -56,16 +65,18 @@ const updateUser = async (req, res) => {
       about: req.body.about,
     });
     if (user) {
-      return res.status(200).send(user);
+      return res.status(OK).send(user);
     }
-    res
-      .status(404)
+    return res
+      .status(NOT_FOUND_ERROR)
       .send({ message: 'Пользователь не создан, что то пошло не так...' });
   } catch (err) {
     if (err.name === 'ValidationError') {
-      return res.status(400).send({ message: err.message });
+      return res.status(BAD_REQUEST_ERROR).send({ message: err.message });
     }
-    return res.status(500).send(err);
+    return res
+      .status(INTERNAL_SERVER_ERROR)
+      .send({ message: 'Ошибка сервера' });
   }
 };
 
@@ -77,16 +88,18 @@ const updateAvatar = async (req, res) => {
     });
 
     if (user) {
-      return res.status(200).send(user);
+      return res.status(OK).send(user);
     }
-    res
-      .status(404)
+    return res
+      .status(NOT_FOUND_ERROR)
       .send({ message: 'Аватар не обновлен, что то пошло не так...' });
   } catch (err) {
     if (err.name === 'ValidationError') {
-      return res.status(400).send({ message: err.message });
+      return res.status(BAD_REQUEST_ERROR).send({ message: err.message });
     }
-    return res.status(500).send(err);
+    return res
+      .status(INTERNAL_SERVER_ERROR)
+      .send({ message: 'Ошибка сервера' });
   }
 };
 
