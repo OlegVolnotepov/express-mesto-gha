@@ -69,7 +69,7 @@ const likeCard = async (req, res) => {
     const card = await Cards.findByIdAndUpdate(
       cardIds,
       { $addToSet: { likes: req.user._id } },
-      { new: true },
+      { new: true }
     );
     if (!card) {
       return res
@@ -78,6 +78,9 @@ const likeCard = async (req, res) => {
     }
     return res.status(OK).send(card);
   } catch (err) {
+    if (err.name === 'CastError') {
+      return res.status(BAD_REQUEST_ERROR).send({ message: err.message });
+    }
     return res
       .status(INTERNAL_SERVER_ERROR)
       .send({ message: 'Ошибка сервера' });
@@ -90,7 +93,7 @@ const deleteLike = async (req, res) => {
     const card = await Cards.findByIdAndUpdate(
       cardIds,
       { $pull: { likes: req.user._id } },
-      { new: true },
+      { new: true }
     );
     if (!card) {
       return res
