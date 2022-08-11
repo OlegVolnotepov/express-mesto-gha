@@ -1,114 +1,82 @@
 const Cards = require('../models/card');
 
-const {
-  NOT_FOUND_ERROR,
-  OK,
-  INTERNAL_SERVER_ERROR,
-  BAD_REQUEST_ERROR,
-  CREATED,
-} = require('../utils/errorMessage');
+const { OK, CREATED } = require('../utils/errorMessage');
 
-const getCards = async (req, res) => {
-  try {
-    const cards = await Cards.find({});
+const BadRequestError = require('../utils/errors/BadRequestError');
+const NotFoundError = require('../utils/errors/NotFoundError');
 
-    if (!cards) {
-      return res
-        .status(NOT_FOUND_ERROR)
-        .send({ message: 'Карточки не найдены' });
-    }
-    return res.status(OK).send(cards);
-  } catch (err) {
-    return res
-      .status(INTERNAL_SERVER_ERROR)
-      .send({ message: 'Ошибка сервера' });
-  }
+const getCards = (req, res, next) => {
+  Cards.find({})
+    .then((cards) => {
+      if (!cards) {
+        return next(new NotFoundError('Карточки не найдены'));
+      }
+    })
+    .catch(next);
 };
 
-const deleteCard = async (req, res) => {
-  try {
-    const cards = await Cards.findByIdAndRemove(req.params.cardId);
-    if (!cards) {
-      return res
-        .status(NOT_FOUND_ERROR)
-        .send({ message: 'Карточка не найдена' });
-    }
-    return res.status(OK).send(cards);
-  } catch (err) {
-    if (err.name === 'CastError') {
-      return res.status(BAD_REQUEST_ERROR).send({ message: err.message });
-    }
-    return res
-      .status(INTERNAL_SERVER_ERROR)
-      .send({ message: 'Ошибка сервера' });
-  }
+const deleteCard = (req, res, next) => {
+  Cards.findById(req.params.cardId)
+    .then((cards) => {
+      if (!cards) {
+        return next(new NotFoundError('Карточка не найдена'));
+      }
+      if (cards.owner.valueOf() !== req.user._id) {
+        return next(
+          new BadRequestError('Можно удалять только вами созданные карточки')
+        );
+      }
+      Cards.findByIdAndRemove(req.params.cardId)
+        .then((card) => {
+          res.status(OK).send(card);
+        })
+        .catch(next);
+    })
+    .catch(next);
 };
 
-const createCard = async (req, res) => {
-  try {
-    const card = await Cards.create({
-      name: req.body.name,
-      link: req.body.link,
-      owner: req.user._id,
-    });
-
-    return res.status(CREATED).send(card);
-  } catch (err) {
-    if (err.name === 'ValidationError') {
-      return res.status(BAD_REQUEST_ERROR).send({ message: err.message });
-    }
-    return res
-      .status(INTERNAL_SERVER_ERROR)
-      .send({ message: 'Ошибка сервера' });
-  }
+const createCard = (req, res, next) => {
+  Cards.create({
+    name: req.body.name,
+    link: req.body.link,
+    owner: req.user._id,
+  })
+    .then((card) => {
+      res.status(CREATED).send(card);
+    })
+    .catch(next);
 };
 
-const likeCard = async (req, res) => {
+const likeCard = (req, res, next) => {
   const cardIds = req.params.cardId;
-  try {
-    const card = await Cards.findByIdAndUpdate(
-      cardIds,
-      { $addToSet: { likes: req.user._id } },
-      { new: true }
-    );
-    if (!card) {
-      return res
-        .status(NOT_FOUND_ERROR)
-        .send({ message: 'Не найден id карточки' });
-    }
-    return res.status(OK).send(card);
-  } catch (err) {
-    if (err.name === 'CastError') {
-      return res.status(BAD_REQUEST_ERROR).send({ message: err.message });
-    }
-    return res
-      .status(INTERNAL_SERVER_ERROR)
-      .send({ message: 'Ошибка сервера' });
-  }
+  Cards.findByIdAndUpdate(
+    cardIds,
+    { $addToSet: { likes: req.user._id } },
+    { new: true }
+  )
+    .then((card) => {
+      if (!card) {
+        return next(new NotFoundError('Не найден id карточки'));
+      }
+      return res.status(OK).send(card);
+    })
+    .catch(next);
 };
 
-const deleteLike = async (req, res) => {
+const deleteLike = (req, res, next) => {
   const cardIds = req.params.cardId;
-  try {
-    const card = await Cards.findByIdAndUpdate(
-      cardIds,
-      { $pull: { likes: req.user._id } },
-      { new: true }
-    );
-    if (!card) {
-      return res
-        .status(NOT_FOUND_ERROR)
-        .send({ message: 'Не найден id карточки' });
-    }
-    return res.status(OK).send(card);
-  } catch (err) {
-    if (err.name === 'CastError') {
-      return res.status(BAD_REQUEST_ERROR).send({ message: err.message });
-    }
-    return res
-      .status(INTERNAL_SERVER_ERROR)
-      .send({ message: 'Ошибка сервера' });
-  }
+  Cards.findByIdAndUpdate(
+    cardIds,
+    { $pull: { likes: req.user._id } },
+    { new: true }
+  )
+    .then((card) => {
+      if (!card) {
+        return next(new NotFoundError('Не найден id карточки'));
+      }
+      return res.status(OK).send(card);
+    })
+    .catch(next);
 };
 
 module.exports = {

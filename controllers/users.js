@@ -1,106 +1,131 @@
 const User = require('../models/user');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { NODE_ENV, JWT_SECRET } = process.env;
 
-const {
-  NOT_FOUND_ERROR,
-  OK,
-  INTERNAL_SERVER_ERROR,
-  BAD_REQUEST_ERROR,
-  CREATED,
-} = require('../utils/errorMessage');
+const { OK, CREATED } = require('../utils/errorMessage');
 
-const getUsers = async (req, res) => {
-  try {
-    const user = await User.find({});
-    return res.status(OK).send(user);
-  } catch (err) {
-    return res
-      .status(INTERNAL_SERVER_ERROR)
-      .send({ message: 'Ошибка сервера' });
-  }
+const BadRequestError = require('../utils/errors/BadRequestError');
+const NotFoundError = require('../utils/errors/NotFoundError');
+const InternalServerError = require('../utils/errors/InternalServerError');
+const ConflictError = require('../utils/errors/ConflictError');
+
+// const getUsers = async (req, res, next) => {
+//   try {
+//     const user = await User.find({});
+//     return res.status(OK).send(user);
+//   } catch (err) {
+//     // return res
+//     //   .status(INTERNAL_SERVER_ERROR)
+//     //   .send({ message: 'Ошибка сервера' });
+//     next(new InternalServerError('Ошибка сервера'));
+//   }
+// };
+const getUsers = (req, res, next) => {
+  User.find({})
+    .then((user) => {
+      res.status(OK).send(user);
+    })
+    .catch(next);
 };
 
-const getUserId = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.userId);
-    if (!user) {
-      return res
-        .status(NOT_FOUND_ERROR)
-        .send({ message: 'Пользователя с таким id не найдено' });
-    }
-    return res.status(OK).send(user);
-  } catch (err) {
-    if (err.name === 'CastError') {
-      return res.status(BAD_REQUEST_ERROR).send({ message: err.message });
-    }
-    return res
-      .status(INTERNAL_SERVER_ERROR)
-      .send({ message: 'Ошибка сервера' });
-  }
-};
-
-const createUser = async (req, res) => {
-  try {
-    const user = await User.create({
-      name: req.body.name,
-      about: req.body.about,
-      avatar: req.body.avatar,
-    });
-
-    return res.status(CREATED).send(user);
-  } catch (err) {
-    if (err.name === 'ValidationError') {
-      return res.status(BAD_REQUEST_ERROR).send({ message: err.message });
-    }
-    return res
-      .status(INTERNAL_SERVER_ERROR)
-      .send({ message: 'Ошибка сервера' });
-  }
-};
-
-const updateUser = async (req, res) => {
-  const userId = req.user;
-  try {
-    const user = await User.findByIdAndUpdate(userId, {
-      name: req.body.name,
-      about: req.body.about,
-    });
-    if (user) {
+const getUserId = (req, res, next) => {
+  User.findById(req.params.userId)
+    .then((user) => {
+      if (!user) {
+        return next(new NotFoundError('Пользователь не найден'));
+      }
       return res.status(OK).send(user);
-    }
-    return res
-      .status(NOT_FOUND_ERROR)
-      .send({ message: 'Пользователь не создан, что то пошло не так...' });
-  } catch (err) {
-    if (err.name === 'ValidationError') {
-      return res.status(BAD_REQUEST_ERROR).send({ message: err.message });
-    }
-    return res
-      .status(INTERNAL_SERVER_ERROR)
-      .send({ message: 'Ошибка сервера' });
-  }
+    })
+    .catch(next);
 };
 
-const updateAvatar = async (req, res) => {
-  const userId = req.user;
-  try {
-    const user = await User.findByIdAndUpdate(userId, {
-      avatar: req.body.avatar,
-    });
+const createUser = (req, res, next) => {
+  const { email, password } = req.body;
 
-    if (user) {
-      return res.status(OK).send(user);
-    }
-    return res
-      .status(NOT_FOUND_ERROR)
-      .send({ message: 'Аватар не обновлен, что то пошло не так...' });
-  } catch (err) {
-    if (err.name === 'ValidationError') {
-      return res.status(BAD_REQUEST_ERROR).send({ message: err.message });
-    }
-    return res
-      .status(INTERNAL_SERVER_ERROR)
-      .send({ message: 'Ошибка сервера' });
+  if (!email || !password) {
+    next(new BadRequestError('Неправильный логин или пароль.'));
   }
+  return User.findOne({ email })
+    .then((user) => {
+      if (user) {
+        next(new ConflictError(`Пользователь с ${email} уже существует.`));
+      }
+      return bcrypt.hash(password, 10);
+    })
+    .then((hash) => {
+      User.create({
+        name: req.body.name,
+        about: req.body.about,
+        avatar: req.body.avatar,
+        password: hash,
+        email,
+      });
+    })
+    .then((user) => {
+      res.status(OK).send({ user });
+    })
+    .catch(next);
+};
+
+const login = (req, res, next) => {
+  const { email, password } = req.body;
+
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign(
+        { _id: user._id },
+        NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
+        {
+          expiresIn: '7d',
+        }
+      );
+      return res.send({ JWT: token });
+    })
+    .catch(next);
+};
+
+const updateUser = (req, res, next) => {
+  const userId = req.user;
+  User.findByIdAndUpdate(userId, {
+    name: req.body.name,
+    about: req.body.about,
+  })
+    .then((user) => {
+      if (!user) {
+        return next(new NotFoundError('Пользователь не найден'));
+      }
+      return res.status(OK).send(user);
+    })
+    .catch(next);
+};
+
+const updateAvatar = (req, res, next) => {
+  const userId = req.user;
+  User.findByIdAndUpdate(userId, {
+    avatar: req.body.avatar,
+  })
+    .then((user) => {
+      if (!user) {
+        next(new InternalServerError());
+      }
+      return res.status(OK).send(user);
+    })
+    .catch(next);
+};
+
+const getCurrentUser = (req, res, next) => {
+  const { _id } = req.user;
+
+  User.findById(_id)
+    .then((user) => {
+      if (!user) {
+        return next(new NotFoundError('Пользователь не найден.'));
+      }
+
+      return res.status(OK).send(user);
+    })
+    .catch(next);
 };
 
 module.exports = {
@@ -109,4 +134,6 @@ module.exports = {
   createUser,
   updateUser,
   updateAvatar,
+  login,
+  getCurrentUser,
 };
