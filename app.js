@@ -4,6 +4,10 @@ const { usersRouter } = require('./routes/users');
 const { cardsRouter } = require('./routes/cards');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
+const {
+  loginValidation,
+  registerValidation,
+} = require('./middlewares/validations');
 const { errors } = require('celebrate');
 require('dotenv').config();
 
@@ -25,14 +29,14 @@ app.use(express.json());
 
 // app.use((req, res, next) => {
 //   req.user = {
-//     _id: '62e18d536a56a798c7c5e242',
+//     _id: '62f8a529f4e9fad3a622832f',
 //   };
 
 //   next();
 // });
 
-app.post('/signin', login);
-app.post('/signup', createUser);
+app.post('/signin', loginValidation, login);
+app.post('/signup', registerValidation, createUser);
 
 app.use(auth);
 

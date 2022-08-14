@@ -1,9 +1,10 @@
-const User = require('../models/user');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const User = require('../models/user');
+
 const { NODE_ENV, JWT_SECRET } = process.env;
 
-const { OK, CREATED } = require('../utils/errorMessage');
+const { OK } = require('../utils/errorMessage');
 
 const BadRequestError = require('../utils/errors/BadRequestError');
 const NotFoundError = require('../utils/errors/NotFoundError');
@@ -43,27 +44,34 @@ const getUserId = (req, res, next) => {
 const createUser = (req, res, next) => {
   const { email, password } = req.body;
 
-  if (!email || !password) {
-    next(new BadRequestError('Неправильный логин или пароль.'));
-  }
-  return User.findOne({ email })
-    .then((user) => {
-      if (user) {
-        next(new ConflictError(`Пользователь с ${email} уже существует.`));
-      }
-      return bcrypt.hash(password, 10);
-    })
-    .then((hash) => {
+  bcrypt
+    .hash(password, 10)
+    .then((hash) =>
       User.create({
+        email,
+        password: hash,
         name: req.body.name,
         about: req.body.about,
         avatar: req.body.avatar,
-        password: hash,
-        email,
+      })
+    )
+    .then((user) => {
+      res.status(OK).send({
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        email: user.email,
       });
     })
-    .then((user) => {
-      res.status(OK).send({ user });
+    .catch((err) => {
+      if (err.code === 11000) {
+        throw new ConflictError(
+          `Пользователь с таким email ${req.body.email} существует`
+        );
+      }
+      if (err.name === 'ValidationError') {
+        throw new BadRequestError(err.message);
+      }
     })
     .catch(next);
 };
