@@ -36,12 +36,7 @@ const getUserId = (req, res, next) => {
       if (!user) {
         return next(new NotFoundError('Пользователь не найден'));
       }
-      return res.status(OK).send({
-        user: user.name,
-        about: user.about,
-        avatar: user.avatar,
-        email: user.email,
-      });
+      return res.status(OK).send(user);
     })
     .catch(next);
 };
