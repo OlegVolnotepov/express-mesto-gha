@@ -40,15 +40,15 @@ app.use(express.json());
 app.post('/signin', loginValidation, login);
 app.post('/signup', registerValidation, createUser);
 
-app.use('*', (req, res, next) => {
-  next(new NotFoundError('Страница не найдена'));
-});
-
 app.use(auth);
 
 app.use(usersRouter);
 
 app.use(cardsRouter);
+
+app.use('*', (req, res, next) => {
+  next(new NotFoundError('Страница не найдена'));
+});
 
 app.use(errors());
 
