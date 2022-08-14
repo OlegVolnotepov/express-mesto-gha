@@ -43,8 +43,7 @@ const createCard = (req, res, next) => {
   })
     .then((card) => {
       res.status(CREATED).send(card);
-    })
-    .catch(next);
+    }).catch(next);
 };
 
 const likeCard = (req, res, next) => {
