@@ -91,7 +91,7 @@ const login = (req, res, next) => {
 };
 
 const updateUser = (req, res, next) => {
-  const userId = req.user;
+  const userId = req.user._id;
   User.findByIdAndUpdate(userId, {
     name: req.body.name,
     about: req.body.about,

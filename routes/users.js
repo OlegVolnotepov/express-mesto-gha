@@ -15,10 +15,10 @@ usersRouter.get('/users', getUsers);
 
 usersRouter.get('/users/me', getCurrentUser);
 
-usersRouter.get('/users/:userId', userIdValidation, getUserId);
-
 usersRouter.patch('/users/me', userIdValidation, updateUser);
 
 usersRouter.patch('/users/me/avatar', userIdValidation, updateAvatar);
+
+usersRouter.get('/users/:userId', userIdValidation, getUserId);
 
 module.exports = { usersRouter };
