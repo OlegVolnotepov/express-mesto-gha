@@ -29,18 +29,18 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
 
 app.use(express.json());
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '62f8a529f4e9fad3a622832f',
-  };
+// app.use((req, res, next) => {
+//   req.user = {
+//     _id: '62f8a529f4e9fad3a622832f',
+//   };
 
-  next();
-});
+//   next();
+// });
 
 app.post('/signin', loginValidation, login);
 app.post('/signup', registerValidation, createUser);
 
-//app.use(auth);
+app.use(auth);
 
 app.use(usersRouter);
 
