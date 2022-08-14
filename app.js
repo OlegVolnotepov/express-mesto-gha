@@ -3,6 +3,7 @@ const { errors } = require('celebrate');
 const mongoose = require('mongoose');
 const { usersRouter } = require('./routes/users');
 const { cardsRouter } = require('./routes/cards');
+const NotFoundError = require('./utils/errors/NotFoundError');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const {
@@ -39,6 +40,10 @@ app.use(express.json());
 app.post('/signin', loginValidation, login);
 app.post('/signup', registerValidation, createUser);
 
+app.use('*', (req, res, next) => {
+  next(new NotFoundError('Страница не найдена'));
+});
+
 app.use(auth);
 
 app.use(usersRouter);
@@ -47,12 +52,13 @@ app.use(cardsRouter);
 
 app.use(errors());
 
-app.use((err, req, res) => {
+app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
 
   res.status(statusCode).send({
     message: statusCode === 500 ? 'На сервере произошла ошибка' : message,
   });
+  next();
 });
 
 app.listen(PORT, () => {

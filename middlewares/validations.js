@@ -1,4 +1,6 @@
 const { celebrate, Joi } = require('celebrate');
+const validator = require('validator');
+const BadRequestError = require('../utils/errors/BadRequestError');
 
 const cardIdValidation = celebrate({
   params: Joi.object().keys({
@@ -32,6 +34,12 @@ const registerValidation = celebrate({
       password: Joi.string().required().min(8).max(30),
       name: Joi.string().min(2).max(30),
       about: Joi.string().min(2).max(30),
+      avatar: Joi.string().custom((value) => {
+        if (!validator.isURL(value, { require_protocol: true })) {
+          throw new BadRequestError('Неправильный формат URL адреса');
+        }
+        return value;
+      }),
     })
     .unknown(true),
 });
