@@ -1,4 +1,5 @@
 const express = require('express');
+const { errors } = require('celebrate');
 const mongoose = require('mongoose');
 const { usersRouter } = require('./routes/users');
 const { cardsRouter } = require('./routes/cards');
@@ -8,7 +9,7 @@ const {
   loginValidation,
   registerValidation,
 } = require('./middlewares/validations');
-const { errors } = require('celebrate');
+
 require('dotenv').config();
 
 const app = express();
@@ -46,7 +47,7 @@ app.use(cardsRouter);
 
 app.use(errors());
 
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   const { statusCode = 500, message } = err;
 
   res.status(statusCode).send({

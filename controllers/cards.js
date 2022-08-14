@@ -9,8 +9,9 @@ const getCards = (req, res, next) => {
   Cards.find({})
     .then((cards) => {
       if (!cards) {
-        return next(new NotFoundError('Карточки не найдены'));
+        next(new NotFoundError('Карточки не найдены'));
       }
+      res.status(OK).send(cards);
     })
     .catch(next);
 };
@@ -19,12 +20,10 @@ const deleteCard = (req, res, next) => {
   Cards.findById(req.params.cardId)
     .then((cards) => {
       if (!cards) {
-        return next(new NotFoundError('Карточка не найдена'));
+        next(new NotFoundError('Карточка не найдена'));
       }
       if (cards.owner.valueOf() !== req.user._id) {
-        return next(
-          new BadRequestError('Можно удалять только вами созданные карточки')
-        );
+        next(new BadRequestError('Можно удалять только вами созданные карточки'));
       }
       Cards.findByIdAndRemove(req.params.cardId)
         .then((card) => {
@@ -52,7 +51,7 @@ const likeCard = (req, res, next) => {
   Cards.findByIdAndUpdate(
     cardIds,
     { $addToSet: { likes: req.user._id } },
-    { new: true }
+    { new: true },
   )
     .then((card) => {
       if (!card) {
@@ -68,7 +67,7 @@ const deleteLike = (req, res, next) => {
   Cards.findByIdAndUpdate(
     cardIds,
     { $pull: { likes: req.user._id } },
-    { new: true }
+    { new: true },
   )
     .then((card) => {
       if (!card) {
