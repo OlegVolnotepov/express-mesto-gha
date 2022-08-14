@@ -72,7 +72,7 @@ const deleteLike = (req, res, next) => {
   )
     .then((card) => {
       if (!card) {
-        return next(new NotFoundError('Не найден id карточки'));
+        return next(new BadRequestError('Не найден id карточки'));
       }
       return res.status(OK).send(card);
     })

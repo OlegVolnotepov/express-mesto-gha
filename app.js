@@ -40,7 +40,7 @@ app.use(express.json());
 app.post('/signin', loginValidation, login);
 app.post('/signup', registerValidation, createUser);
 
-app.use(auth);
+//app.use(auth);
 
 app.use(usersRouter);
 

@@ -24,8 +24,8 @@ const ConflictError = require('../utils/errors/ConflictError');
 // };
 const getUsers = (req, res, next) => {
   User.find({})
-    .then((user) => {
-      res.status(OK).send(user);
+    .then((users) => {
+      res.status(OK).send(users);
     })
     .catch(next);
 };
@@ -101,7 +101,12 @@ const updateUser = (req, res, next) => {
       if (!user) {
         return next(new NotFoundError('Пользователь не найден'));
       }
-      return res.status(OK).send(user);
+      return res.status(OK).send({
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        email: user.email,
+      });
     })
     .catch(next);
 };
@@ -129,7 +134,12 @@ const getCurrentUser = (req, res, next) => {
         return next(new NotFoundError('Пользователь не найден.'));
       }
 
-      return res.status(OK).send(user);
+      return res.status(OK).send({
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        email: user.email,
+      });
     })
     .catch(next);
 };
