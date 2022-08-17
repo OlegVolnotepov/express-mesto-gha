@@ -12,7 +12,12 @@ const createCardValidation = celebrate({
   body: Joi.object()
     .keys({
       name: Joi.string().required().min(2).max(30),
-      link: Joi.string().required(),
+      link: Joi.string().required.custom((value) => {
+        if (!validator.isURL(value, { require_protocol: true })) {
+          throw new BadRequestError('Неправильный формат URL адреса');
+        }
+        return value;
+      }),
     })
     .unknown(true),
 });
