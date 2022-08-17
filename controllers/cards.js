@@ -18,7 +18,7 @@ const deleteCard = (req, res, next) => {
   Cards.findById(req.params.cardId)
     .then((cards) => {
       if (!cards) {
-        return next(new BadRequestError('Карточка не найдена'));
+        return next(new NotFoundError('Карточка не найдена'));
       }
       if (cards.owner.valueOf() !== req.user._id) {
         return next(
@@ -77,7 +77,7 @@ const deleteLike = (req, res, next) => {
   )
     .then((card) => {
       if (!card) {
-        return next(new BadRequestError('Не найден id карточки'));
+        return next(new NotFoundError('Не найден id карточки'));
       }
       return res.send(card);
     })
