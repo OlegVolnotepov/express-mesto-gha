@@ -4,28 +4,14 @@ const User = require('../models/user');
 
 // const { NODE_ENV, JWT_SECRET } = process.env;
 
-const { OK } = require('../utils/errorMessage');
-
 const BadRequestError = require('../utils/errors/BadRequestError');
 const NotFoundError = require('../utils/errors/NotFoundError');
-const InternalServerError = require('../utils/errors/InternalServerError');
 const ConflictError = require('../utils/errors/ConflictError');
 
-// const getUsers = async (req, res, next) => {
-//   try {
-//     const user = await User.find({});
-//     return res.status(OK).send(user);
-//   } catch (err) {
-//     // return res
-//     //   .status(INTERNAL_SERVER_ERROR)
-//     //   .send({ message: 'Ошибка сервера' });
-//     next(new InternalServerError('Ошибка сервера'));
-//   }
-// };
 const getUsers = (req, res, next) => {
   User.find({})
     .then((users) => {
-      res.status(OK).send(users);
+      res.send(users);
     })
     .catch(next);
 };
@@ -36,7 +22,7 @@ const getUserId = (req, res, next) => {
       if (!user) {
         return next(new NotFoundError('Пользователь не найден'));
       }
-      return res.status(OK).send(user);
+      return res.send(user);
     })
     .catch(next);
 };
@@ -54,7 +40,7 @@ const createUser = (req, res, next) => {
       avatar: req.body.avatar,
     }))
     .then((user) => {
-      res.status(OK).send({
+      res.send({
         name: user.name,
         about: user.about,
         avatar: user.avatar,
@@ -67,9 +53,10 @@ const createUser = (req, res, next) => {
       }
       if (err.name === 'ValidationError') {
         throw new BadRequestError(err.message);
+      } else {
+        next(err);
       }
-    })
-    .catch(next);
+    });
 };
 
 const login = (req, res, next) => {
@@ -92,36 +79,56 @@ const login = (req, res, next) => {
 
 const updateUser = (req, res, next) => {
   const userId = req.user._id;
-  User.findByIdAndUpdate(userId, {
-    name: req.body.name,
-    about: req.body.about,
-  })
+  User.findByIdAndUpdate(
+    userId,
+    {
+      name: req.body.name,
+      about: req.body.about,
+    },
+    { new: true, runValidators: true },
+  )
     .then((user) => {
       if (!user) {
         return next(new NotFoundError('Пользователь не найден'));
       }
-      return res.status(OK).send({
+      return res.send({
         name: user.name,
         about: user.about,
         avatar: user.avatar,
         email: user.email,
       });
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Введены некорректные данные'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const updateAvatar = (req, res, next) => {
   const userId = req.user;
-  User.findByIdAndUpdate(userId, {
-    avatar: req.body.avatar,
-  })
+  User.findByIdAndUpdate(
+    userId,
+    {
+      avatar: req.body.avatar,
+    },
+    { new: true, runValidators: true },
+  )
     .then((user) => {
       if (!user) {
-        next(new InternalServerError());
+        next(new NotFoundError('Пользователь не найден'));
       }
-      return res.status(OK).send(user);
+      return res.send(user);
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Введены некорректные данные'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const getCurrentUser = (req, res, next) => {
@@ -133,7 +140,7 @@ const getCurrentUser = (req, res, next) => {
         return next(new NotFoundError('Пользователь не найден.'));
       }
 
-      return res.status(OK).send({
+      return res.send({
         name: user.name,
         about: user.about,
         avatar: user.avatar,

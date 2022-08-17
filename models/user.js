@@ -1,6 +1,7 @@
 // models/user.js
 const mongoose = require('mongoose');
 const { isEmail } = require('validator');
+const isURL = require('validator/lib/isURL');
 const bcrypt = require('bcryptjs');
 const UnauthorizedError = require('../utils/errors/UnauthorizedError');
 
@@ -20,10 +21,8 @@ const userSchema = new mongoose.Schema({
   avatar: {
     type: String,
     validate: {
-      validator(v) {
-        return /^(https?:\/\/)?([\da-z.-]+).([a-z.]{2,6})([/\w.-]*)*\/?$/g.test(v);
-      },
-      message: 'Ссылка не корректна!',
+      validator: (v) => isURL(v),
+      message: 'Неправильный формат ссылки!',
     },
     default:
       'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',

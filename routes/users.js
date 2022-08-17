@@ -9,15 +9,19 @@ const {
   getCurrentUser,
 } = require('../controllers/users');
 
-const { userIdValidation } = require('../middlewares/validations');
+const {
+  userIdValidation,
+  updateUserdValidation,
+  updateAvatardValidation,
+} = require('../middlewares/validations');
 
 usersRouter.get('/users', getUsers);
 
 usersRouter.get('/users/me', getCurrentUser);
 
-usersRouter.patch('/users/me', userIdValidation, updateUser);
+usersRouter.patch('/users/me', updateUserdValidation, updateUser);
 
-usersRouter.patch('/users/me/avatar', userIdValidation, updateAvatar);
+usersRouter.patch('/users/me/avatar', updateAvatardValidation, updateAvatar);
 
 usersRouter.get('/users/:userId', userIdValidation, getUserId);
 
