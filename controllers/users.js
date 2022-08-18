@@ -52,7 +52,7 @@ const createUser = (req, res, next) => {
         next(new ConflictError('Пользователь с таким email уже существует'));
       }
       if (err.name === 'ValidationError') {
-        throw new BadRequestError(err.message);
+        next(new BadRequestError(err.message));
       } else {
         next(err);
       }

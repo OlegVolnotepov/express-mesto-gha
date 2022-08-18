@@ -18,8 +18,7 @@ const createCardValidation = celebrate({
         }
         return value;
       }),
-    })
-    .unknown(true),
+    }),
 });
 
 const updateUserdValidation = celebrate({
